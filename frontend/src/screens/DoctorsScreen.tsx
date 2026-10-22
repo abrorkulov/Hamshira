@@ -7,13 +7,15 @@ import { RootStackParamList } from '../types';
 import { Colors } from '../constants/colors';
 import { FontSize, FontWeight } from '../constants/typography';
 import { Spacing } from '../constants/layout';
-import { DOCTORS } from '../data';
+import { useAppStore } from '../store';
 import { DoctorCard } from '../components/ui/DoctorCard';
 
 type Nav = StackNavigationProp<RootStackParamList>;
 
 export const DoctorsScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
+  const doctors = useAppStore((s) => s.doctors);
+  const apiError = useAppStore((s) => s.apiError);
   const fade = useRef(new Animated.Value(0)).current;
   useEffect(() => Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }).start(), []);
 
@@ -21,14 +23,15 @@ export const DoctorsScreen: React.FC = () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Shifokorlar</Text>
-        <Text style={styles.sub}>{DOCTORS.length} nafar mutaxassis</Text>
+        <Text style={styles.sub}>{doctors.length} nafar mutaxassis</Text>
       </View>
       <Animated.FlatList
         style={{ opacity: fade }}
-        data={DOCTORS}
+        data={doctors}
         keyExtractor={(d) => d.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={<Text style={styles.sub}>{apiError || 'Backenddan shifokorlar yuklanmadi'}</Text>}
         renderItem={({ item }) => (
           <DoctorCard
             doctor={item}

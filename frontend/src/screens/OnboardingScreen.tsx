@@ -63,11 +63,11 @@ export const OnboardingScreen: React.FC = () => {
       flatRef.current?.scrollTo({ x: width * next, animated: true });
     } else {
       setOnboarded();
-      navigation.replace('Main');
+      navigation.replace('Auth');
     }
   };
 
-  const skip = () => { setOnboarded(); navigation.replace('Main'); };
+  const skip = () => { setOnboarded(); navigation.replace('Auth'); };
 
   return (
     <LinearGradient colors={slide.bgGrad} style={styles.root}>

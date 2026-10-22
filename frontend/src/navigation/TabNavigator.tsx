@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
     paddingTop: 8,
-    shadowColor: Colors.shadow,
+    shadowColor: Colors.shadowColor,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 1,
     shadowRadius: 12,

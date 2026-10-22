@@ -10,7 +10,7 @@ import { RootStackParamList, ServiceCategory } from '../types';
 import { Colors } from '../constants/colors';
 import { FontSize, FontWeight } from '../constants/typography';
 import { Radius, Shadow, Spacing } from '../constants/layout';
-import { SERVICES } from '../data';
+import { useAppStore } from '../store';
 import { ServiceCard } from '../components/ui/ServiceCard';
 
 type Nav = StackNavigationProp<RootStackParamList>;
@@ -24,6 +24,8 @@ const CATS: { id: ServiceCategory | 'barchasi'; label: string; icon: string }[] 
 
 export const ServicesScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
+  const services = useAppStore((s) => s.services);
+  const apiError = useAppStore((s) => s.apiError);
   const [cat, setCat]       = useState<string>('barchasi');
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -33,7 +35,7 @@ export const ServicesScreen: React.FC = () => {
     Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }).start();
   }, []);
 
-  const filtered = SERVICES.filter((s) => {
+  const filtered = services.filter((s) => {
     const catOk = cat === 'barchasi' || s.category === cat;
     const searchOk = s.name.toLowerCase().includes(search.toLowerCase());
     return catOk && searchOk;
@@ -62,7 +64,7 @@ export const ServicesScreen: React.FC = () => {
           <>
             <View>
               <Text style={styles.title}>Xizmatlar</Text>
-              <Text style={styles.sub}>{SERVICES.length} ta xizmat</Text>
+              <Text style={styles.sub}>{services.length} ta xizmat</Text>
             </View>
             <TouchableOpacity
               style={styles.searchBtn}
@@ -113,7 +115,7 @@ export const ServicesScreen: React.FC = () => {
           ListEmptyComponent={
             <View style={styles.empty}>
               <Ionicons name="search-outline" size={44} color={Colors.border} />
-              <Text style={styles.emptyText}>Hech narsa topilmadi</Text>
+              <Text style={styles.emptyText}>{services.length === 0 ? (apiError || 'Backenddan xizmatlar yuklanmadi') : 'Hech narsa topilmadi'}</Text>
             </View>
           }
           renderItem={({ item }) => (

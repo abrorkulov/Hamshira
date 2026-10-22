@@ -37,7 +37,10 @@ export const OrderDetailScreen: React.FC = () => {
   const handleCancel = () => {
     Alert.alert('Bekor qilish', 'Buyurtmani bekor qilishni tasdiqlaysizmi?', [
       { text: "Yo'q", style: 'cancel' },
-      { text: 'Ha', style: 'destructive', onPress: () => { cancelOrder(order.id); navigation.goBack(); } },
+      { text: 'Ha', style: 'destructive', onPress: async () => {
+        try { await cancelOrder(order.id); navigation.goBack(); }
+        catch (error) { Alert.alert('Bekor qilib bo‘lmadi', error instanceof Error ? error.message : 'Server bilan bog‘lanib bo‘lmadi.'); }
+      } },
     ]);
   };
 
