@@ -4,6 +4,8 @@ Single-file Express API using PostgreSQL. Start with `npm install`, configure `.
 
 The server listens on port 4000 and automatically creates its tables and inserts the app catalog at startup when PostgreSQL is reachable. Health check: `GET /api/health`.
 
+Swagger UI is available at `http://localhost:4000/api-docs` and raw spec at `http://localhost:4000/api-docs.json`.
+
 Public routes: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/services`, `GET /api/doctors`.
 
 Send `Authorization: Bearer <token>` for `GET/PATCH /api/me`, `GET/POST/PATCH/DELETE /api/addresses`, and `GET/POST /api/orders`, `GET /api/orders/:id`, `PATCH /api/orders/:id/cancel`.

@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS doctors (
 );
 CREATE TABLE IF NOT EXISTS addresses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  label VARCHAR(60) NOT NULL, full TEXT NOT NULL, district VARCHAR(100) NOT NULL DEFAULT '',
+  label VARCHAR(60) NOT NULL, "full" TEXT NOT NULL, district VARCHAR(100) NOT NULL DEFAULT '',
   city VARCHAR(100) NOT NULL DEFAULT '', is_default BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS orders (
   service_id UUID NOT NULL REFERENCES services(id), doctor_id UUID REFERENCES doctors(id) ON DELETE SET NULL,
   appointment_at TIMESTAMPTZ NOT NULL, address TEXT NOT NULL DEFAULT '',
   status VARCHAR(24) NOT NULL DEFAULT 'kutilmoqda' CHECK(status IN ('kutilmoqda','tasdiqlangan','bajarilmoqda','bajarildi','bekor_qilindi')),
-  type VARCHAR(24) NOT NULL DEFAULT 'uyga_tashrif' CHECK(type IN ('uyga_tashrif','onlayn_maslahat')),
+  "type" VARCHAR(24) NOT NULL DEFAULT 'uyga_tashrif' CHECK("type" IN ('uyga_tashrif','onlayn_maslahat')),
   price INTEGER NOT NULL CHECK(price >= 0), notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
