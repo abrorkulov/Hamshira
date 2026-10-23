@@ -13,7 +13,6 @@ import { Colors } from '../constants/colors';
 import { FontSize, FontWeight } from '../constants/typography';
 import { Radius, Shadow, Spacing } from '../constants/layout';
 import { useAppStore } from '../store';
-import { SERVICES, DOCTORS } from '../data';
 import { ServiceCard } from '../components/ui/ServiceCard';
 import { DoctorCard } from '../components/ui/DoctorCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
@@ -24,7 +23,7 @@ type Nav = StackNavigationProp<RootStackParamList>;
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
-  const { user, orders, unreadCount } = useAppStore();
+  const { user, orders, unreadCount, services, doctors } = useAppStore();
 
   const fadeY = useRef(new Animated.Value(24)).current;
   const fade  = useRef(new Animated.Value(0)).current;
@@ -38,7 +37,7 @@ export const HomeScreen: React.FC = () => {
 
   const count = unreadCount();
   const activeOrder = orders.find((o) => o.status === 'bajarilmoqda' || o.status === 'kutilmoqda');
-  const availableDoctors = DOCTORS.filter((d) => d.available).slice(0, 2);
+  const availableDoctors = doctors.filter((d) => d.available).slice(0, 2);
 
   const animStyle = { opacity: fade, transform: [{ translateY: fadeY }] };
 
@@ -144,14 +143,14 @@ export const HomeScreen: React.FC = () => {
         <Animated.View style={[styles.section, animStyle]}>
           <SectionHeader
             title="Xizmatlar"
-            subtitle={`${SERVICES.length} ta xizmat mavjud`}
+            subtitle={`${services.length} ta xizmat mavjud`}
             onSeeAll={() => (navigation as any).navigate('Main', { screen: 'ServicesTab' })}
           />
           <ScrollView
             horizontal showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.hScroll}
           >
-            {SERVICES.map((s) => (
+            {services.map((s) => (
               <ServiceCard
                 key={s.id}
                 service={s}

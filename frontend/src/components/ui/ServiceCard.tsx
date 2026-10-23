@@ -32,7 +32,8 @@ export const ServiceCard: React.FC<Props> = ({ service, onPress }) => {
 
   return (
     <TouchableOpacity activeOpacity={1} onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}>
-      <Animated.View style={[styles.card, { transform: [{ scale }], backgroundColor: bgColor }]}>
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <Animated.View style={[styles.card, { backgroundColor: bgColor }]}>
         {service.popular && (
           <View style={styles.badge}>
             <Ionicons name="flame" size={10} color={Colors.primary} />
@@ -56,6 +57,7 @@ export const ServiceCard: React.FC<Props> = ({ service, onPress }) => {
             <Ionicons name="arrow-forward" size={13} color={Colors.primary} />
           </View>
         </View>
+        </Animated.View>
       </Animated.View>
     </TouchableOpacity>
   );

@@ -77,6 +77,7 @@ export type RootTabParamList = {
 
 export type RootStackParamList = {
   Onboarding:      undefined;
+  Auth:            undefined;
   Main:            undefined;
   ServiceDetail:   { service: Service };
   DoctorDetail:    { doctor: Doctor };

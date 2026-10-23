@@ -7,11 +7,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList, Service, Order } from '../types';
+import { RootStackParamList, Service } from '../types';
 import { Colors } from '../constants/colors';
 import { FontSize, FontWeight } from '../constants/typography';
 import { Radius, Shadow, Spacing } from '../constants/layout';
-import { SERVICES } from '../data';
 import { useAppStore } from '../store';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 
@@ -19,17 +18,16 @@ type Nav = StackNavigationProp<RootStackParamList, 'BookOrder'>;
 type RouteP = RouteProp<RootStackParamList, 'BookOrder'>;
 
 const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-const DATE_OPTS  = [
-  { id: 'today',    label: 'Bugun',       sub: '19-okt' },
-  { id: 'tomorrow', label: 'Ertaga',      sub: '20-okt' },
-  { id: 'd2',       label: 'Seshanba',    sub: '21-okt' },
-  { id: 'd3',       label: 'Chorshanba',  sub: '22-okt' },
-];
+const DATE_OPTS = Array.from({ length: 4 }, (_, i) => {
+  const date = new Date();
+  date.setDate(date.getDate() + i);
+  return { id: ['today', 'tomorrow', 'd2', 'd3'][i], label: ['Bugun', 'Ertaga', 'Indinga', '3 kundan so‘ng'][i], sub: date.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' }) };
+});
 
 export const BookOrderScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const route      = useRoute<RouteP>();
-  const { addOrder, user } = useAppStore();
+  const { createOrderRequest, user, services } = useAppStore();
 
   const [selService, setSelService] = useState<Service | null>(route.params?.service ?? null);
   const [selDate,    setSelDate]    = useState<string>('today');
@@ -49,35 +47,31 @@ export const BookOrderScreen: React.FC = () => {
   const isValid = !!(selService && selDate && selTime);
   const fmtPrice = (p: number) => `${p.toLocaleString('uz-UZ')} so'm`;
 
-  const handleBook = () => {
-    if (!isValid) return;
+  const handleBook = async () => {
+    if (!isValid || !selService || !selTime) return;
     setLoading(true);
-    setTimeout(() => {
+    try {
       const dateLabel = DATE_OPTS.find((d) => d.id === selDate)?.label ?? 'Bugun';
       const defaultAddr = user.addresses.find((a) => a.isDefault);
-      const newOrder: Order = {
-        id:        Date.now().toString(),
-        service:   selService!,
-        date:      dateLabel,
-        time:      selTime!,
-        address:   defaultAddr?.full ?? 'Manzil kiritilmagan',
-        status:    'kutilmoqda',
-        price:     selService!.price,
-        createdAt: new Date().toISOString(),
-        type:      'uyga_tashrif',
-      };
-      addOrder(newOrder);
+      const appointment = new Date();
+      appointment.setDate(appointment.getDate() + Math.max(0, DATE_OPTS.findIndex((d) => d.id === selDate)));
+      const [hours, minutes] = selTime.split(':').map(Number);
+      appointment.setHours(hours, minutes, 0, 0);
+      await createOrderRequest({
+        serviceId: selService.id,
+        appointmentAt: appointment.toISOString(),
+        address: defaultAddr?.full ?? 'Manzil kiritilmagan',
+        type: 'uyga_tashrif',
+      });
+      Alert.alert('Buyurtma qabul qilindi!', `${selService.name} — ${dateLabel}, soat ${selTime}`, [{
+        text: "Buyurtmalarimga o'tish",
+        onPress: () => (navigation as any).navigate('Main', { screen: 'OrdersTab' }),
+      }]);
+    } catch (error) {
+      Alert.alert('Buyurtma yuborilmadi', error instanceof Error ? error.message : 'Server bilan bog‘lanib bo‘lmadi.');
+    } finally {
       setLoading(false);
-
-      Alert.alert(
-        '✅ Buyurtma qabul qilindi!',
-        `${selService!.name} — ${dateLabel}, soat ${selTime}`,
-        [{
-          text: "Buyurtmalarimga o'tish",
-          onPress: () => (navigation as any).navigate('Main', { screen: 'OrdersTab' }),
-        }]
-      );
-    }, 1200);
+    }
   };
 
   return (
@@ -97,7 +91,7 @@ export const BookOrderScreen: React.FC = () => {
           {/* ── 1. Xizmat ── */}
           <Text style={styles.sLabel}>Xizmatni tanlang</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
-            {SERVICES.map((s) => {
+            {services.map((s) => {
               const sel = selService?.id === s.id;
               return (
                 <TouchableOpacity

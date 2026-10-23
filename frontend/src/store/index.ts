@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Order, User, Service, Address } from '../types';
-import { ORDERS, CURRENT_USER } from '../data';
+import { CURRENT_USER } from '../data';
+import { api, setAccessToken } from '../api/client';
 
 interface Notification {
   id: string;
@@ -24,11 +25,19 @@ interface AppState {
   user: User;
   orders: Order[];
   notifications: Notification[];
+  services: Service[];
+  doctors: import('../types').Doctor[];
+  token: string | null;
+  apiError: string | null;
   selectedService: Service | null;
   isOnboarded: boolean;
 
   // user actions
   setUser: (user: User) => void;
+  authenticate: (mode: 'login' | 'register', fields: { name?: string; phone: string; password: string }) => Promise<void>;
+  loadCatalog: () => Promise<void>;
+  loadAccount: () => Promise<void>;
+  createOrderRequest: (input: { serviceId: string; appointmentAt: string; address: string; type: Order['type'] }) => Promise<Order>;
   updateUserField: (field: keyof User, value: string) => void;
   addAddress: (address: Address) => void;
   updateAddress: (address: Address) => void;
@@ -37,7 +46,7 @@ interface AppState {
 
   // order actions
   addOrder: (order: Order) => void;
-  cancelOrder: (id: string) => void;
+  cancelOrder: (id: string) => Promise<void>;
 
   // notification actions
   markNotificationRead: (id: string) => void;
@@ -53,12 +62,52 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => ({
   user: CURRENT_USER,
-  orders: ORDERS,
+  orders: [],
   notifications: INITIAL_NOTIFICATIONS,
+  services: [],
+  doctors: [],
+  token: null,
+  apiError: null,
   selectedService: null,
   isOnboarded: false,
 
   setUser: (user) => set({ user }),
+
+  authenticate: async (mode, fields) => {
+    set({ apiError: null });
+    try {
+      const result = mode === 'register'
+        ? await api.register({ name: fields.name || '', phone: fields.phone, password: fields.password })
+        : await api.login({ phone: fields.phone, password: fields.password });
+      setAccessToken(result.token);
+      set({ token: result.token, user: { ...result.user, addresses: [], currentLocation: '' }, isOnboarded: true });
+      await Promise.all([get().loadAccount(), get().loadCatalog()]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Server bilan bog‘lanib bo‘lmadi.';
+      set({ apiError: message });
+      throw error;
+    }
+  },
+
+  loadCatalog: async () => {
+    try {
+      const [services, doctors] = await Promise.all([api.services(), api.doctors()]);
+      set({ services, doctors, apiError: null });
+    } catch (error) {
+      set({ apiError: error instanceof Error ? error.message : 'Katalogni yuklab bo‘lmadi.' });
+    }
+  },
+
+  loadAccount: async () => {
+    const [profile, orders] = await Promise.all([api.me(), api.orders()]);
+    set({ user: profile, orders, apiError: null });
+  },
+
+  createOrderRequest: async (input) => {
+    const order = await api.createOrder(input);
+    set((state) => ({ orders: [order, ...state.orders], apiError: null }));
+    return order;
+  },
 
   updateUserField: (field, value) =>
     set((s) => ({ user: { ...s.user, [field]: value } })),
@@ -90,12 +139,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   addOrder: (order) =>
     set((s) => ({ orders: [order, ...s.orders] })),
 
-  cancelOrder: (id) =>
-    set((s) => ({
-      orders: s.orders.map((o) =>
-        o.id === id ? { ...o, status: 'bekor_qilindi' as const } : o
-      ),
-    })),
+  cancelOrder: async (id) => {
+    const updated = await api.cancelOrder(id);
+    set((s) => ({ orders: s.orders.map((o) => o.id === id ? updated : o) }));
+  },
 
   markNotificationRead: (id) =>
     set((s) => ({
